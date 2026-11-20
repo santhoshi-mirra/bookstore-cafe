@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+sprites/incoming/
+preview.png
+*.zip
+node_modules/
