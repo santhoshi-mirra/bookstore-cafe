@@ -1,9 +1,9 @@
 ---
 name: add-pixellab-sprites
-description: Add a new PixelLab sprite sheet or animation (walking, sitting, sipping, new characters) to the Bookstore Café game. Use when Mirra drops a PixelLab zip or PNG into the project or asks to add an animation or character.
+description: Add a new PixelLab sprite sheet or animation (walking, sitting, sipping, new characters) to the Lunaria game. Use when Mirra drops a PixelLab zip or PNG into the project or asks to add an animation or character.
 ---
 
-# Add PixelLab sprites to the Bookstore Café
+# Add PixelLab sprites to the Lunaria
 
 PixelLab exports a zip with a PNG sprite sheet and a JSON file describing every row. Follow these steps.
 

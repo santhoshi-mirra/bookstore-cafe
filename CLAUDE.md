@@ -1,6 +1,6 @@
-# The Bookstore Café
+# Lunaria
 
-A cozy pixel-art focus game in the browser. The player walks a witch around an isometric bookstore café, buys a drink at the counter, sits down and focuses for a 20-minute session (pomodoro style) to earn money that unlocks drinks and hat colours.
+A cozy pixel-art focus café in the browser. The player does a makeover, picks a bag, packs it, then walks a witch into Lunaria (an isometric café and bookstore), buys a drink at the counter, sits down and focuses (20, 35, 45, 60 min or custom) to earn money that unlocks drinks, bags and hat colours.
 
 Owner: Mirra. This is a fun side project, built mostly with Claude Code.
 
@@ -16,8 +16,10 @@ Always use a local server, not file://. Hat recolouring reads pixels from the sp
 ## Files
 
 - `index.html`: the whole game in one file (HTML, CSS, then one `<script>` block at the end)
-- `room.jpg`: the café background (1671 × 941). All game coordinates are in this image's pixels
+- `room.webp`: the café room cut out on a transparent background (1054 × 851). All game coordinates are in this image's pixels
 - `witch.png`: PixelLab sprite sheet, 96 × 96 cells
+- `sounds/`: looping ambience files (`cafe.mp3`, `cups.mp3`, `rain.mp3`, `waves.mp3`, `fire.mp3`). Missing files show an Add button in the Sounds panel
+- `cat.png` (optional): PixelLab cat sheet, see `CAT_SHEET` in the code
 - `.claude/skills/`: project skills (see below)
 
 ## How the code is organised (inside the script)
@@ -32,7 +34,7 @@ Sections are marked with `/* ---- name ---- */` comments, in this order:
    - `SEATS`: `f` = where her feet go when seated, `a` = the walkable spot she walks to first
    - `OCC`: occluders. Polygons of furniture that get redrawn on top of her when her `y` is smaller than the occluder's `y`, so she can sit or walk behind tables
    - `COUNTER`, `CAT`, `LAMPS` (night-mode glows)
-3. **save**: everything persists in `localStorage` under `bookcafe-v3`. Wrap storage in try/catch
+3. **save**: everything persists in `localStorage` under `lunaria-v1`. Wrap storage in try/catch
 4. **sprites**: `ROW` and `NF` map animation names to sheet rows and frame counts. `DIRS` is the rotation order in row 0. `sheetFor(hat)` recolours the purple hat pixels by hue
 5. **geometry + paths**: `free(x, y)` checks walkability, `plan()` is A* on a 16px grid, `goTo()` walks there
 6. **UI**: `hud()`, `pomoUI()`, modals use `open(id)` / `close(id)`
@@ -42,23 +44,25 @@ Sections are marked with `/* ---- name ---- */` comments, in this order:
 
 ## Sprite sheet (witch.png)
 
-| Row | Animation | Frames | Direction |
-|---|---|---|---|
-| 0 | standing rotations | 8 | S, SE, E, NE, N, NW, W, SW |
-| 1 | sitting down | 7 | S |
-| 2 | walking | 6 | S |
-| 3 | seated sip | 7 | S |
-| 4 | standing drink | 6 | S |
-| 5 | breathing idle | 4 | S |
+| Rows | Animation | Frames |
+|---|---|---|
+| 0 | standing rotations S, SE, E, NE, N, NW, W, SW | 8 |
+| 1–8 | sitting down, one row per direction in the same order (S, SE, E, NE, N, NW, W, SW) | 7 |
+| 9–11 | standing sip (unused) | 7 |
+| 12–19 | walking, one row per direction in the same order | 6 |
 
-The pivot is the feet at cell pixel (48, 79). Characters are drawn at 2× scale (`SC`). Mirror a direction with `drawFrame(..., flip=true)` instead of generating it (E → W, SE → SW, NE → NW).
+`SIT` and `WALK` in the code map directions to rows. NE and NW sitting came out wrong in PixelLab, so back-facing table chairs use the N sitting row and the chair back is redrawn over her (`chair` on the seat). The pivot is the feet at cell pixel (48, 79), drawn at `SC` = 1.5.
 
 ## Game rules (don't break these)
 
 - A drink is required to sit. The drink empties over the focus session, so each session needs a new drink
-- Focus = 20 min, break = 5 min. After a break, focus restarts automatically only if she's still seated with a drink
+- Focus length: 20, 35, 45, 60 min or custom (5 to 180). Pay = $0.50 per minute (`RATE`)
+- After each session a pop-up offers a 10-minute break (skippable). Breaks never auto-start a session
+- Start money is $6. Cappuccino and latte ($3, hot or iced) are free to buy; other drinks, bags (backpack is the free one) and two hats are locked in Unlocks (lock icon)
 - **No cheating:** there is no "complete" button. Time only counts while the tab is visible (switching tabs pauses it). Standing up during focus ends the session with no pay. Test mode (20 s) pays nothing
-- Money shows as dollars with two decimals (`money(n)`). Paying shows a `−$x.00` pop above her head; finishing shows `+$10.00`
+- Money shows as dollars with two decimals (`money(n)`). Paying shows a `−$x.00` pop above her head; finishing shows `+$x.00`
+- No sipping animation: a hot drink shows rising steam from the mug on the table; iced shows ice
+- Clicking outside the floor does nothing (no message)
 
 ## Design rules
 
@@ -78,9 +82,47 @@ The pivot is the feet at cell pixel (48, 79). Characters are drawn at 2× scale 
 
 ## To do
 
-- Walking animations for N, E, NE, SE (mirror for the rest)
-- Sitting SE (armchairs) and E (side chairs); mirror for SW and W
-- Barista and customer sprites, boy witch
-- Bag and makeup variants shown on the character
-- Replace the placeholder cat with a PixelLab cat
+- Bag sprites: a PixelLab version of the witch for each bag (backpack, crossbody, satchel, tote), then pick the sheet by `S.char.bag`
+- Hairstyles, makeup and the witch boy as PixelLab variants
+- PixelLab cat with idle and roll rows (`cat.png`, see `CAT_SHEET`)
+- Barista and customer sprites
+- Google Calendar: sign in with Google, read today's events, and offer them as tasks when sitting down
 - Deploy (Vercel or GitHub Pages)
+
+## Rebuild plan: Phaser 3 + separate furniture
+
+The current version uses one painted room image and hand-traced polygons for walking and depth. That keeps causing glitches (walking through furniture, floating on chairs). Rebuild it so every piece of furniture is its own sprite. Work through these phases in order, one at a time. Show Mirra a screenshot at the end of each phase before moving on, and commit after each one.
+
+### Phase 1: set up Phaser
+- Add Phaser 3 from a CDN (pinned version) and Vite for a dev server (`npm create vite@latest`, vanilla JS)
+- Folder layout: `src/scenes/` (Intro, Cafe, UI), `src/data/` (drinks, unlocks, seats), `public/assets/` (images, sprites, sounds)
+- Keep the current `index.html` as `legacy.html` for reference until the rebuild matches it
+
+### Phase 2: split the room into pieces
+- `bg_room.png`: floor and walls only, with no movable furniture. Make it by asking ChatGPT for "the same room, empty: only the floor, walls, windows, wall shelves and counter", or by painting the furniture out
+- One PNG per piece with a transparent background: `armchair_l`, `armchair_r`, `coffee_table`, `table_round`, `chair_se`, `chair_sw`, `chair_ne`, `chair_nw`, `counter`, `display_case`, `plant_*`, `lamp_*`, `planter_*`, `chalkboard`. Cut them out of `room.webp` where possible (Python + Pillow), or make them in PixelLab's Objects tab at the same scale
+- Every piece gets an anchor at its floor contact point (bottom centre), so it can be placed and depth-sorted by that point
+
+### Phase 3: place the furniture with data
+- `src/data/layout.js`: a list of pieces `{ key, x, y, collide: {w, h} }` in room pixels
+- Each piece is a Phaser image with `setOrigin(0.5, 1)` and `setDepth(y)`. The witch also uses `setDepth(y)` every frame, so depth is automatic
+- Collisions: an Arcade Physics static body per piece, sized to its floor footprint only (not its full height)
+- Add a debug key (F2) that draws every footprint and seat point so the layout can be checked visually
+
+### Phase 4: the witch
+- Load `witch.png` as a spritesheet (96 × 96 frames) and create animations from the rows in the sprite table above: walk in 8 directions, idle from the rotation row, sit in each direction
+- Movement: click-to-move with pathfinding over a walk grid built from the collision bodies (use `easystarjs`), plus WASD
+- Hat and cardigan recolouring: keep the hue-swap code, run it once on a canvas and add the result as a new texture
+
+### Phase 5: seats
+- Each chair piece has a `seat` (where her feet go when seated), an `approach` point and a `face` direction
+- When seated, set her depth just above the chair for chairs facing away from the viewer (se, sw, s), and just below the chair for chairs facing the table from the near side (ne, nw), so the chair back hides her legs
+- NE and NW sitting need regenerated PixelLab rows (the first try faced the viewer)
+
+### Phase 6: port the game features
+Port everything listed under Game rules and Design rules: intro (makeover, bag, packing animation), menu with hot/iced, money pops above her head, timers (20/35/45/60/custom), break pop-up, steam on the mug, unlocks with lock icon, night mode, sounds mixer, cat petting, streaks and tasks, drag and zoom camera (Phaser camera with bounds and zoom 1 to 1.7). The HTML UI (timer card, dock, modals) can stay as HTML on top of the Phaser canvas.
+
+### Phase 7: later
+- Bag sprite variants, the witch boy, barista and customers, PixelLab cat
+- Google Calendar sign-in to pull today's events as tasks
+- Deploy to Vercel
