@@ -1,9 +1,12 @@
 // Title screen. Loads the shared assets, then hands over to the café.
+import { PIECES } from '../data/layout.js';
+
 export default class Intro extends Phaser.Scene {
   constructor() { super('Intro'); }
 
   preload() {
     this.load.image('room', 'assets/images/room.webp');
+    PIECES.forEach(p => this.load.image(p.key, `assets/furniture/${p.key}.png`));
     this.load.spritesheet('witch', 'assets/sprites/witch.png', { frameWidth: 96, frameHeight: 96 });
   }
 
