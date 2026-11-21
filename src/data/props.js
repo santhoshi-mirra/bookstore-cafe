@@ -4,8 +4,9 @@
 // seat: where her feet go when seated. approach: walkable spot she walks to first. face: sitting direction.
 //   mug: where her drink stands on the table (or the coffee table, for the armchairs).
 //   depth (optional): her depth while seated, when the default (just above or below the chair) is wrong.
-//   chair_3_sw needs it to sit in front of the lamp cabinet, and chair_3_nw is approached from the side
-//   because it backs onto the railing.
+//   chair_3_sw needs it to sit in front of the lamp cabinet, and chair_2_se to sit in front of its table
+//   (it's beside the table, not behind it, so the tabletop would cover her face).
+//   chair_3_nw is approached from the side because it backs onto the railing.
 // front (optional): the piece's front floor edge as a polyline, left to right, for long or V-shaped pieces
 //   where one anchor y gives the wrong depth. She's drawn in front of the piece when her feet are below
 //   this edge at her x. Traced from the lowest opaque pixel per column of the piece PNG.
@@ -27,21 +28,21 @@ export const PROPS = {
                   front: [[147, 568], [213, 602], [235, 601]] },
   // window table
   table_1:      { collide: { w: 56, h: 28 } },
-  chair_1_se:   { collide: { w: 30, h: 16 }, seat: [368, 574], approach: [330, 572], face: 'se', mug: [401, 550] },
-  chair_1_sw:   { collide: { w: 30, h: 16 }, seat: [485, 578], approach: [520, 576], face: 'sw', mug: [450, 550] },
-  chair_1_ne:   { collide: { w: 44, h: 26 }, seat: [369, 632], approach: [378, 662], face: 'ne', mug: [410, 560] },
-  chair_1_nw:   { collide: { w: 44, h: 26 }, seat: [496, 632], approach: [488, 662], face: 'nw', mug: [448, 560] },
+  chair_1_se:   { collide: { w: 30, h: 16 }, seat: [375, 580], approach: [330, 572], face: 'se', mug: [392, 562] },
+  chair_1_sw:   { collide: { w: 30, h: 16 }, seat: [478, 584], approach: [520, 576], face: 'sw', mug: [462, 562] },
+  chair_1_ne:   { collide: { w: 44, h: 26 }, seat: [369, 604], approach: [378, 662], face: 'ne', mug: [414, 576] },
+  chair_1_nw:   { collide: { w: 44, h: 26 }, seat: [496, 604], approach: [488, 662], face: 'nw', mug: [440, 576] },
   // middle table (three chairs)
   table_2:      { collide: { w: 56, h: 28 } },
-  chair_2_se:   { collide: { w: 40, h: 22 }, seat: [590, 578], approach: [552, 592], face: 'se', mug: [613, 515] },
-  chair_2_sw:   { collide: { w: 28, h: 14 }, seat: [688, 540], approach: [722, 540], face: 'sw', mug: [654, 515] },
-  chair_2_nw:   { collide: { w: 44, h: 24 }, seat: [698, 590], approach: [700, 618], face: 'nw', mug: [654, 525] },
+  chair_2_se:   { collide: { w: 40, h: 22 }, seat: [590, 578], approach: [552, 592], face: 'se', mug: [618, 542], depth: 597 },
+  chair_2_sw:   { collide: { w: 28, h: 14 }, seat: [681, 546], approach: [722, 540], face: 'sw', mug: [665, 526] },
+  chair_2_nw:   { collide: { w: 44, h: 24 }, seat: [696, 562], approach: [700, 618], face: 'nw', mug: [643, 540] },
   // corner table (four chairs) and the side cabinet with its lamp
   table_3:      { collide: { w: 56, h: 28 } },
-  chair_3_se:   { collide: { w: 30, h: 16 }, seat: [853, 544], approach: [818, 548], face: 'se', mug: [884, 498] },
-  chair_3_sw:   { collide: { w: 28, h: 14 }, seat: [962, 542], approach: [940, 540], face: 'sw', mug: [930, 498], depth: 551 },
-  chair_3_ne:   { collide: { w: 44, h: 26 }, seat: [851, 572], approach: [850, 602], face: 'ne', mug: [888, 508] },
-  chair_3_nw:   { collide: { w: 44, h: 26 }, seat: [966, 572], approach: [914, 587], face: 'nw', mug: [924, 508] },
+  chair_3_se:   { collide: { w: 30, h: 16 }, seat: [860, 550], approach: [818, 548], face: 'se', mug: [872, 505] },
+  chair_3_sw:   { collide: { w: 28, h: 14 }, seat: [962, 542], approach: [940, 540], face: 'sw', mug: [942, 505], depth: 551 },
+  chair_3_ne:   { collide: { w: 44, h: 26 }, seat: [851, 545], approach: [850, 602], face: 'ne', mug: [894, 519] },
+  chair_3_nw:   { collide: { w: 44, h: 26 }, seat: [966, 544], approach: [914, 587], face: 'nw', mug: [920, 519] },
   // a long diagonal piece: the second box covers its left end, which the first one missed
   lamp_table_r: { collide: [{ w: 36, h: 60, dx: 20 }, { w: 22, h: 21, dx: -8, dy: -33 }],
                   front: [[921, 494], [980, 553], [995, 550]] },
