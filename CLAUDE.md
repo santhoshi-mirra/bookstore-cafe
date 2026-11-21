@@ -128,10 +128,12 @@ The current version uses one painted room image and hand-traced polygons for wal
 - Hat and cardigan recolouring: keep the hue-swap code, run it once on a canvas and add the result as a new texture
 - The cardigan recolour only touches pixels in the cardigan mask, and the hat recolour skips the tote, so the tote and its moon keep their colours (done)
 
-### Phase 5: seats
-- Each chair piece has a `seat` (where her feet go when seated), an `approach` point and a `face` direction
-- When seated, set her depth just above the chair for chairs facing away from the viewer (se, sw, s), and just below the chair for chairs facing the table from the near side (ne, nw), so the chair back hides her legs
-- NE and NW sitting need regenerated PixelLab rows (the first try faced the viewer)
+### Phase 5: seats (done)
+- Each chair piece has a `seat` (where her feet go when seated), an `approach` point and a `face` direction, plus an optional `depth` override (in `props.js`)
+- Click a chair (pixel-accurate on its PNG) and she walks to `approach`, slides onto `seat` and plays `sit_<face>`. A floor click, another chair or WASD stands her up (sit animation reversed) first
+- When seated, her depth is just above the chair for chairs facing away from the viewer (se, sw, s), and just below the chair for chairs facing the table from the near side (ne, nw), so the chair back hides her legs. `chair_3_sw` uses `depth: 551` so the lamp cabinet doesn't cover her
+- The F2 debug view warns in the console if an `approach` point isn't walkable
+- Still to do: NE and NW sitting need regenerated PixelLab rows (the first try faced the viewer). Until then they use the N row, which works because the chair back covers most of her
 
 ### Phase 6: port the game features
 Port everything listed under Game rules and Design rules: intro (makeover, bag, packing animation), menu with hot/iced, money pops above her head, timers (20/35/45/60/custom), break pop-up, steam on the mug, unlocks with lock icon, night mode, sounds mixer, cat petting, streaks and tasks, drag and zoom camera (Phaser camera with bounds and zoom 1 to 1.7). The HTML UI (timer card, dock, modals) can stay as HTML on top of the Phaser canvas.
