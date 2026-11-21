@@ -5,12 +5,19 @@
 //   depth (optional): her depth while seated, when the default (just above or below the chair) is wrong.
 //   chair_3_sw needs it to sit in front of the lamp cabinet, and chair_3_nw is approached from the side
 //   because it backs onto the railing.
+// front (optional): the piece's front floor edge as a polyline, left to right, for long or V-shaped pieces
+//   where one anchor y gives the wrong depth. She's drawn in front of the piece when her feet are below
+//   this edge at her x. Traced from the lowest opaque pixel per column of the piece PNG.
 // Only chairs that exist in layout.js have a seat (table 2 has no ne chair).
 export const PROPS = {
   // reading corner
-  armchair_l:   { collide: { w: 84, h: 44 }, seat: [227, 478], approach: [272, 506], face: 'se' },
-  armchair_r:   { collide: { w: 80, h: 40 }, seat: [391, 458], approach: [358, 486], face: 'sw' },
-  coffee_table: { collide: { w: 64, h: 30 } },
+  armchair_l:   { collide: { w: 84, h: 44 }, seat: [227, 478], approach: [272, 506], face: 'se',
+                  front: [[170, 491], [212, 507], [268, 482]] },
+  armchair_r:   { collide: { w: 80, h: 40 }, seat: [391, 458], approach: [358, 486], face: 'sw',
+                  front: [[350, 452], [398, 473], [436, 458]] },
+  // the second box closes the gap to armchair_l, which is too narrow for her
+  coffee_table: { collide: [{ w: 64, h: 30 }, { w: 26, h: 24, dx: -40, dy: 2 }],
+                  front: [[274, 477], [312, 498], [352, 480]] },
   lamp_floor:   { collide: { w: 16, h: 10 } },
   // window table
   table_1:      { collide: { w: 56, h: 28 } },
@@ -31,18 +38,30 @@ export const PROPS = {
   chair_3_nw:   { collide: { w: 44, h: 26 }, seat: [966, 572], approach: [914, 587], face: 'nw' },
   lamp_table_r: { collide: { w: 36, h: 60, dx: 20 } },
   // counter
-  counter_l:    { collide: { w: 72, h: 60, dy: 6 } },
-  display_case: { collide: [{ w: 56, h: 40, dx: -28, dy: -10 }, { w: 56, h: 40, dx: 28, dy: 18 }] },
-  counter_r:    { collide: [{ w: 60, h: 40, dx: -28, dy: 12 }, { w: 60, h: 40, dx: 30, dy: -10 }] },
+  counter_l:    { collide: { w: 72, h: 60, dy: 6 }, front: [[614, 420], [680, 442]] },
+  display_case: { collide: [{ w: 56, h: 40, dx: -28, dy: -10 }, { w: 56, h: 40, dx: 28, dy: 18 }],
+                  front: [[680, 447], [792, 500]] },
+  counter_r:    { collide: [{ w: 60, h: 40, dx: -28, dy: 12 }, { w: 60, h: 40, dx: 30, dy: -10 }],
+                  front: [[798, 500], [920, 458]] },
   // entrance
-  planter_l:    { collide: { w: 70, h: 30 } },
-  planter_m:    { collide: { w: 76, h: 30 } },
-  planter_r:    { collide: { w: 70, h: 30 } },
+  planter_l:    { collide: { w: 70, h: 30 }, front: [[118, 632], [190, 663]] },
+  planter_m:    { collide: { w: 76, h: 30 }, front: [[332, 722], [406, 753], [420, 747]] },
+  planter_r:    { collide: { w: 70, h: 30 }, front: [[782, 681], [864, 654]] },
   lamp_post_1:  { collide: { w: 56, h: 24, dy: 8 } },
   lamp_post_2:  { collide: { w: 56, h: 24, dy: 8 } },
   lamp_post_3:  { collide: { w: 54, h: 24, dy: 8 } },
   chalkboard:   { collide: { w: 70, h: 20 } },
 };
+
+// y of a front edge polyline at x (clamped to its ends)
+export function edgeY(front, x) {
+  if (x <= front[0][0]) return front[0][1];
+  for (let i = 1; i < front.length; i++) {
+    const [x0, y0] = front[i - 1], [x1, y1] = front[i];
+    if (x <= x1) return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+  }
+  return front[front.length - 1][1];
+}
 
 // every footprint box of a piece as { x, y, w, h } (centre, size) in room pixels
 export function boxes(piece) {

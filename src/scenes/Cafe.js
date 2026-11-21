@@ -4,13 +4,15 @@
 import EasyStar from 'easystarjs';
 import { DOOR, FLOOR } from '../data/seats.js';
 import { PIECES } from '../data/layout.js';
-import { PROPS, boxes } from '../data/props.js';
+import { PROPS, boxes, edgeY } from '../data/props.js';
 import { HATS, OUTFITS } from '../data/unlocks.js';
 import { FX, FY, SC, dirFrom, witchTexture, witchAnims } from '../witch.js';
 
 const ROOM_W = 1054, ROOM_H = 851;
 const GS = 8, GW = Math.ceil(ROOM_W / GS), GH = Math.ceil(ROOM_H / GS); // walk grid
 const FEET_W = 14, FEET_H = 6; // the bit of floor she stands on
+const BODY_W = 36, BODY_H = 100; // her drawn body around the feet, for working out which pieces overlap her
+const EDGE_SLACK = 8; // she counts as in front of a front edge from this close behind it (footprints are boxy)
 const SPEED = 130; // px per second, same as legacy
 const ROSE = 0xf2a3b6, BUTTER = 0xf6d46e, SAGE = 0x8fc29a, LAVENDER = 0xb5a4f0;
 
@@ -205,6 +207,22 @@ export default class Cafe extends Phaser.Scene {
     });
   }
 
+  // standing depth: above every piece her body overlaps that she's in front of, below every one she's
+  // behind. Pieces with a `front` edge compare her feet with that edge at her x, others with their anchor y.
+  // If the two can't both hold, she stays in front so she's never hidden.
+  standDepth() {
+    const { x, y } = this.witch;
+    let lo = -Infinity, hi = Infinity;
+    for (const p of PIECES) {
+      if (x + BODY_W / 2 < p.left || x - BODY_W / 2 > p.left + p.w || y < p.top || y - BODY_H > p.top + p.h) continue;
+      const f = PROPS[p.key]?.front;
+      if (f ? y > edgeY(f, x) - EDGE_SLACK : y >= p.y) lo = Math.max(lo, p.y);
+      else hi = Math.min(hi, p.y);
+    }
+    if (y > lo && y < hi) return y;
+    return lo < hi && hi < Infinity ? (Math.max(lo, hi - 1) + hi) / 2 : lo + 0.5;
+  }
+
   // seated depth: in front of a chair she faces the viewer from (its back is behind her),
   // behind a chair she faces away from the viewer on (its back covers her legs)
   seatDepth(piece) {
@@ -262,11 +280,11 @@ export default class Cafe extends Phaser.Scene {
     }
 
     if (!this.posing) this.witch.play(`${this.tex}:${moving ? 'walk' : 'idle'}_${this.dir}`, true);
-    this.witch.setDepth(this.seated ? this.seatDepth(this.seated) : this.witch.y);
-    this.shadow.setPosition(this.witch.x, this.witch.y - 1).setDepth(this.witch.y - 0.5);
+    this.witch.setDepth(this.seated ? this.seatDepth(this.seated) : this.standDepth());
+    this.shadow.setPosition(this.witch.x, this.witch.y - 1).setDepth(this.witch.depth - 0.01);
   }
 
-  // F2 or Shift+D shows footprints, anchors, seats, the floor outline, blocked walk cells and her path.
+  // F2 or Shift+D shows footprints, anchors, front edges, seats, the floor outline, blocked walk cells and her path.
   // While it's on: H cycles hat colours, O cycles outfit colours, X plays the sit animation.
   setupDebug() {
     const g = this.add.graphics().setDepth(10000).setVisible(false);
@@ -281,6 +299,8 @@ export default class Cafe extends Phaser.Scene {
         g.lineStyle(1, LAVENDER, 1).strokeRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h);
       }
       g.fillStyle(ROSE, 1).fillCircle(p.x, p.y, 2.5);
+      const f = PROPS[p.key]?.front;
+      if (f) g.lineStyle(1.5, ROSE, 1).strokePoints(f.map(([x, y]) => ({ x, y })));
       const s = PROPS[p.key];
       if (s?.seat) {
         if (!this.free(...s.approach)) console.warn(`${p.key}: approach point isn't walkable`);
