@@ -19,6 +19,11 @@ export const PROPS = {
   coffee_table: { collide: [{ w: 64, h: 30 }, { w: 26, h: 24, dx: -40, dy: 2 }],
                   front: [[274, 477], [312, 498], [352, 480]] },
   lamp_floor:   { collide: { w: 16, h: 10 } },
+  // left wall. She can only stand to the right of the candle bookcase, beside it, so its front edge sits
+  // above her and it's always behind her. The book cabinet is only ever behind her or to her left.
+  bookcase_l:   { collide: { w: 56, h: 50, dx: -3 }, front: [[60, 470], [147, 470]] },
+  book_cabinet: { collide: [{ w: 35, h: 52, dx: -32 }, { w: 51, h: 49, dx: 11, dy: 5 }],
+                  front: [[147, 568], [213, 602], [235, 601]] },
   // window table
   table_1:      { collide: { w: 56, h: 28 } },
   chair_1_se:   { collide: { w: 30, h: 16 }, seat: [368, 574], approach: [330, 572], face: 'se' },
@@ -36,14 +41,16 @@ export const PROPS = {
   chair_3_sw:   { collide: { w: 28, h: 14 }, seat: [962, 542], approach: [940, 540], face: 'sw', depth: 551 },
   chair_3_ne:   { collide: { w: 44, h: 26 }, seat: [851, 572], approach: [850, 602], face: 'ne' },
   chair_3_nw:   { collide: { w: 44, h: 26 }, seat: [966, 572], approach: [914, 587], face: 'nw' },
-  lamp_table_r: { collide: { w: 36, h: 60, dx: 20 } },
+  // a long diagonal piece: the second box covers its left end, which the first one missed
+  lamp_table_r: { collide: [{ w: 36, h: 60, dx: 20 }, { w: 22, h: 21, dx: -8, dy: -33 }],
+                  front: [[921, 494], [980, 553], [995, 550]] },
   // counter
   counter_l:    { collide: { w: 72, h: 60, dy: 6 }, front: [[614, 420], [680, 442]] },
   display_case: { collide: [{ w: 56, h: 40, dx: -28, dy: -10 }, { w: 56, h: 40, dx: 28, dy: 18 }],
                   front: [[680, 447], [792, 500]] },
   counter_r:    { collide: [{ w: 60, h: 40, dx: -28, dy: 12 }, { w: 60, h: 40, dx: 30, dy: -10 }],
                   front: [[798, 500], [920, 458]] },
-  // entrance
+  // entrance. The railing pillars and the garden gate have no footprint: the floor already stops at them
   planter_l:    { collide: { w: 70, h: 30 }, front: [[118, 632], [190, 663]] },
   planter_m:    { collide: { w: 76, h: 30 }, front: [[332, 722], [406, 753], [420, 747]] },
   planter_r:    { collide: { w: 70, h: 30 }, front: [[782, 681], [864, 654]] },
