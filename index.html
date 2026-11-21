@@ -34,6 +34,44 @@ button{font-family:inherit}
 button:focus-visible,input:focus-visible,label:focus-visible{outline:2px solid var(--sage-d);outline-offset:2px}
 .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);color:var(--ink);padding:9px 16px;border-radius:999px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;max-width:min(520px,70%);z-index:3;box-shadow:0 8px 20px #3b302a17}
 .toast.on{opacity:1}
+.timer{position:fixed;left:clamp(12px,2.5vw,32px);top:72px;width:250px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px 18px;box-shadow:0 12px 30px #3b302a14;z-index:2}
+.lbl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);font-weight:500}
+.lbl b{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}
+.lbl.focus b{background:var(--sage)}.lbl.brk b{background:var(--rose)}
+.time{font:600 clamp(40px,4.4vw,52px)/1 Fraunces,serif;letter-spacing:-.02em;margin:8px 0 12px;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--hover);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--sage);border-radius:3px;transition:width .3s}
+.bar i.brk{background:var(--rose)}
+.task{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:14px;min-height:24px}
+.drink{display:flex;gap:12px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.cup{width:28px;height:34px;border:2px solid var(--ink);border-radius:4px 4px 9px 9px;position:relative;overflow:hidden;flex:none}
+.cup i{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--sage);transition:height .4s}
+.drink b{font-weight:600}.drink small{display:block;color:var(--mut);font-size:12px;line-height:1.35}
+.bagline{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12px;color:var(--mut)}
+.bagline img{width:24px;height:24px;object-fit:contain;flex:none}
+.dock{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 7px;box-shadow:0 12px 30px #3b302a17;z-index:2;max-width:calc(100% - 24px);overflow-x:auto}
+.ib{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--ink);background:none;border:0;cursor:pointer;flex:none;padding:0}
+.ib:hover,.ib.on{background:var(--hover)}
+.ib[disabled]{opacity:.35;cursor:default;background:none}
+.sep{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
+.modal{position:fixed;inset:0;display:none;place-items:center;background:#3b302a33;padding:14px;overflow:auto;z-index:5;backdrop-filter:blur(2px)}
+.modal.on{display:grid}
+.card{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:24px;padding:22px 24px;width:min(540px,100%);box-shadow:0 20px 50px #3b302a26;max-height:100%;overflow:auto}
+.card h2{font:600 26px/1.1 Fraunces,serif;margin:0 0 4px}
+.card h3{font:600 17px Fraunces,serif;margin:14px 0 4px}
+.card p.sub{margin:0 0 12px;color:var(--mut);font-size:14px}
+.menu{display:grid;gap:2px;margin:6px 0 10px}
+.mi{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:0;background:none;color:var(--ink);font:500 15px 'DM Sans';text-align:left;width:100%}
+button.mi{cursor:pointer}button.mi:hover{background:var(--hover)}
+.mi small{display:block;color:var(--mut);font-size:12px;font-weight:400}
+.mi .p{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.mi .p .ico{width:15px;height:15px}
+.mi[disabled]{opacity:.5;cursor:not-allowed;background:none}
+.mi .opts{display:flex;gap:6px;align-items:center}
+.mi .opts .p{margin-right:6px}
+.mi.lockd{color:var(--mut)}
+.foot{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}
+.pop{position:fixed;left:0;top:0;z-index:3;pointer-events:none;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #ece4d8;border-radius:999px;padding:5px 16px 5px 6px;font:600 18px 'DM Sans',sans-serif;box-shadow:0 3px 12px #3b302a2e;white-space:nowrap;opacity:0}
+.pop i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 13px 'DM Sans',sans-serif;font-style:normal;color:#8a5f12;background:radial-gradient(circle at 40% 35%,#ffe9a3 0,#f2c14e 60%,#d39a2a 100%);border:1.5px solid #b8862a}
 .lab{font-weight:600;font-size:13px;color:var(--mut);margin-top:12px}
 .note{font-size:13px;color:var(--mut);margin:8px 0 0}
 /* intro */
@@ -87,6 +125,11 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:2px solid v
 .letsgo{font:600 26px Fraunces,serif;text-align:center;position:absolute;top:22px;left:0;right:0;opacity:0;transition:opacity .4s}
 .letsgo.on{opacity:1}
 @media(max-width:760px){
+  .timer{left:50%;transform:translateX(-50%);top:62px;width:min(340px,calc(100% - 20px));padding:10px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:14px;align-items:center}
+  .timer .time{font-size:32px;margin:0;grid-row:1/3;grid-column:1}
+  .timer .lbl{grid-column:2}.timer .bar{grid-column:2;margin-top:6px}
+  .timer .task,.timer .drink,.timer .bagline{display:none}
+  .dock{bottom:10px}
   .pill{font-size:12px;padding:5px 10px}
   .toast{top:84px;max-width:90%;border-radius:16px}
   .ibody{grid-template-columns:1fr}.vis{min-height:220px}
@@ -111,6 +154,31 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:2px solid v
   </div>
 </header>
 <div class="toast" id="toast" role="status"></div>
+
+<section class="timer" aria-live="polite">
+  <div class="lbl" id="pPhase"><b></b><span>Ready when you are</span></div>
+  <div class="time" id="pTime">20:00</div>
+  <div class="bar"><i id="pBar"></i></div>
+  <div class="task"><span id="pTask">Order a drink, then pick a seat</span></div>
+  <div class="drink"><div class="cup" aria-hidden="true"><i id="cupFill"></i></div><div><b id="dName">No drink yet</b><small id="dSub">Visit the counter to order</small></div></div>
+  <div class="bagline" id="bagLine"></div>
+</section>
+
+<nav class="dock" aria-label="Controls">
+  <button class="ib" id="shopBtn" aria-label="Unlocks" title="Unlocks"><svg viewBox="0 0 24 24"><use href="#lock"/></svg></button>
+</nav>
+
+<div class="modal" id="mOrder"><div class="card">
+  <h2>Menu</h2><p class="sub">Each focus session needs a drink. You'll finish it by the end.</p>
+  <div class="menu" id="menu"></div>
+  <div class="foot"><button class="btn" id="orderClose">Not now</button></div>
+</div></div>
+
+<div class="modal" id="mShop"><div class="card">
+  <h2>Unlocks</h2><p class="sub">Spend what you earn from focus sessions.</p>
+  <div id="shop"></div>
+  <div class="foot"><button class="btn" id="shopClose">Close</button></div>
+</div></div>
 
 <!-- intro: shown over the café until "Let's go" -->
 <div class="intro loading" id="intro">

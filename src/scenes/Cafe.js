@@ -2,14 +2,15 @@
 // a static physics body per piece sized to its floor footprint, and the witch walking around it.
 // Coordinates are room.webp pixels (1054 x 851).
 import EasyStar from 'easystarjs';
-import { DOOR, FLOOR } from '../data/seats.js';
+import { COUNTER, DOOR, FLOOR } from '../data/seats.js';
 import { PIECES } from '../data/layout.js';
 import { PROPS, boxes, edgeY } from '../data/props.js';
 import { HATS, OUTFITS } from '../data/unlocks.js';
 import { FX, FY, SC, dirFrom, witchTexture, witchAnims } from '../witch.js';
 import { S } from '../state.js';
-import { ui, toast } from '../ui.js';
+import { ui, toast, hud, updatePops } from '../ui.js';
 import { openIntro } from '../intro.js';
+import { doOrder } from '../shop.js';
 
 const ROOM_W = 1054, ROOM_H = 851;
 const GS = 8, GW = Math.ceil(ROOM_W / GS), GH = Math.ceil(ROOM_H / GS); // walk grid
@@ -17,6 +18,7 @@ const FEET_W = 14, FEET_H = 6; // the bit of floor she stands on
 const BODY_W = 36, BODY_H = 100; // her drawn body around the feet, for working out which pieces overlap her
 const EDGE_SLACK = 8; // she counts as in front of a front edge from this close behind it (footprints are boxy)
 const SPEED = 130; // px per second, same as legacy
+const COUNTER_PIECES = ['counter_l', 'display_case', 'counter_r']; // clicking any of these goes to order
 const ROSE = 0xf2a3b6, BUTTER = 0xf6d46e, SAGE = 0x8fc29a, LAVENDER = 0xb5a4f0;
 
 function inPoly(x, y, poly) {
@@ -58,7 +60,7 @@ export default class Cafe extends Phaser.Scene {
     this.dir = 'n';
     this.path = null;
     this.posing = false;
-    this.pending = null; // chair she's walking to
+    this.pending = null; // what to do when she gets where she's walking: () => void
     this.seated = null;  // chair she's sitting on
     this.busy = false;   // sitting down or standing up, ignore input
     this.look = { hat: S.char.hat, outfit: S.char.outfit }; // the debug keys change this, not the save
@@ -83,6 +85,7 @@ export default class Cafe extends Phaser.Scene {
       this.dir = 'n';
       this.goTo(DOOR[0] - 10, DOOR[1] - 60);
     }
+    hud();
     toast('Welcome to Lunaria! Order a drink at the counter first');
   }
 
@@ -149,37 +152,61 @@ export default class Cafe extends Phaser.Scene {
       }
       this.path = out.length ? out : null;
       this.drawPath();
+      if (!this.path) this.arrive(); // already there
     });
   }
 
   setupInput() {
     // no key capture, so the keys still type into the HTML inputs
     this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SHIFT', false);
-    // a click on a chair sits her down there; clicks outside the floor (walls, shelves,
-    // outside the room) do nothing. Chair backs can stick out past the floor, so check chairs first
+    // a click on a chair sits her down there, a click on the counter goes to order; clicks outside
+    // the floor (walls, shelves, outside the room) do nothing. Chair backs and the counter stick out
+    // past the floor, so check furniture first
     this.input.on('pointerdown', ptr => {
       if (this.busy || ui.busy) return;
-      const x = ptr.worldX, y = ptr.worldY, chair = this.seatAt(x, y);
-      if (!chair && !inPoly(x, y, FLOOR)) return;
+      const x = ptr.worldX, y = ptr.worldY, piece = this.pieceAt(x, y);
+      const chair = piece && PROPS[piece.key]?.seat ? piece : null;
+      // the espresso machine, cups and back counter are background, not pieces, so they count via COUNTER.hit
+      const [hx0, hy0, hx1, hy1] = COUNTER.hit;
+      const counter = piece ? COUNTER_PIECES.includes(piece.key)
+        : x > hx0 && x < hx1 && y > hy0 && y < hy1 && !inPoly(x, y, FLOOR);
+      if (!chair && !counter && !inPoly(x, y, FLOOR)) return;
       if (chair && chair === this.seated) return;
       this.pending = null;
-      const go = chair ? () => this.sitOn(chair) : () => { this.posing = false; this.goTo(x, y); };
+      const go = chair ? () => this.sitOn(chair)
+        : counter ? () => this.walkTo(...COUNTER.a, () => this.atCounter())
+        : () => this.walkTo(x, y);
       if (this.seated) this.standUp(go); else go();
     });
   }
 
-  // the chair under a room point, if the topmost furniture pixel there belongs to one
-  seatAt(x, y) {
-    const p = this.byDepth.find(p => x >= p.left && x < p.left + p.w && y >= p.top && y < p.top + p.h
-      && this.textures.getPixelAlpha(Math.floor(x - p.left), Math.floor(y - p.top), p.key) > 0);
-    return p && PROPS[p.key]?.seat ? p : null;
+  // the piece whose pixel is topmost at a room point
+  pieceAt(x, y) {
+    return this.byDepth.find(p => x >= p.left && x < p.left + p.w && y >= p.top && y < p.top + p.h
+      && this.textures.getPixelAlpha(Math.floor(x - p.left), Math.floor(y - p.top), p.key) > 0) || null;
   }
 
-  // walk to the chair's approach point; update() calls sit() when she gets there
-  sitOn(piece) {
+  // walk somewhere, then run `then` when she gets there
+  walkTo(x, y, then = null) {
     this.posing = false;
-    this.pending = piece;
-    this.goTo(...PROPS[piece.key].approach);
+    this.pending = then;
+    this.goTo(x, y);
+  }
+
+  arrive() {
+    const then = this.pending;
+    this.pending = null;
+    then?.();
+  }
+
+  atCounter() {
+    this.dir = 'ne';
+    doOrder();
+  }
+
+  // walk to the chair's approach point, then sit
+  sitOn(piece) {
+    this.walkTo(...PROPS[piece.key].approach, () => this.sit(piece));
   }
 
   // slide from the approach point onto the seat (through the chair's footprint), then sit
@@ -283,7 +310,7 @@ export default class Cafe extends Phaser.Scene {
         this.path.shift();
         if (!this.path.length) this.path = null;
         this.drawPath();
-        if (!this.path && this.pending) { this.sit(this.pending); this.pending = null; }
+        if (!this.path) this.arrive();
       }
       moving = true;
     }
@@ -291,6 +318,10 @@ export default class Cafe extends Phaser.Scene {
     if (!this.posing) this.witch.play(`${this.tex}:${moving ? 'walk' : 'idle'}_${this.dir}`, true);
     this.witch.setDepth(this.seated ? this.seatDepth(this.seated) : this.standDepth());
     this.shadow.setPosition(this.witch.x, this.witch.y - 1).setDepth(this.witch.depth - 0.01);
+
+    // money pops float above her head, in screen pixels
+    const cam = this.cameras.main, headY = this.witch.y - (this.seated ? 46 : 63) * SC - 14;
+    updatePops(dt, (this.witch.x - cam.worldView.x) * cam.zoom, (headY - cam.worldView.y) * cam.zoom);
   }
 
   // F2 or Shift+D shows footprints, anchors, front edges, seats, the floor outline, blocked walk cells and her path.

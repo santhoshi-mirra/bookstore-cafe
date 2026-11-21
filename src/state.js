@@ -39,3 +39,8 @@ export function fmt(s) {
   return h ? `${h}:${String(m).padStart(2, '0')}:${r}` : `${m}:${r}`;
 }
 export const mins = m => m >= 60 ? `${Math.floor(m / 60)}h ${Math.round(m % 60)}m` : `${Math.round(m)}m`;
+
+// the drink in her hand: not saved, so each visit starts with an empty hand (same as legacy).
+// level goes from 1 (full) to 0 over a focus session
+export const cup = { drink: null, iced: false, level: 0 };
+export const hasDrink = () => cup.drink !== null && cup.level > 0.02;
