@@ -4,8 +4,9 @@ A cozy pixel-art focus café. Do a makeover, pack your bag, walk into Lunaria, o
 
 ## Run it
 
-    python -m http.server 8000
+    npm install
+    npm run dev
 
-Then open http://localhost:8000
+Then open http://localhost:5173 (the old version is at /legacy.html).
 
 See CLAUDE.md for how the code works.

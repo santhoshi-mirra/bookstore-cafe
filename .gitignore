@@ -4,3 +4,4 @@ sprites/incoming/
 preview.png
 *.zip
 node_modules/
+dist/

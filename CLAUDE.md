@@ -7,22 +7,26 @@ Owner: Mirra. This is a fun side project, built mostly with Claude Code.
 ## Run it
 
 ```bash
-python -m http.server 8000
-# open http://localhost:8000
+npm install
+npm run dev
+# open the URL Vite prints (http://localhost:5173)
 ```
 
-Always use a local server, not file://. Hat recolouring reads pixels from the sprite sheet, and browsers block that on file://.
+The new Phaser game is at `/`, the old one at `/legacy.html`. Always use the dev server, not file://. Hat recolouring reads pixels from the sprite sheet, and browsers block that on file://.
 
 ## Files
 
-- `index.html`: the whole game in one file (HTML, CSS, then one `<script>` block at the end)
-- `room.webp`: the café room cut out on a transparent background (1054 × 851). All game coordinates are in this image's pixels
-- `witch.png`: PixelLab sprite sheet, 96 × 96 cells
-- `sounds/`: looping ambience files (`cafe.mp3`, `cups.mp3`, `rain.mp3`, `waves.mp3`, `fire.mp3`). Missing files show an Add button in the Sounds panel
-- `cat.png` (optional): PixelLab cat sheet, see `CAT_SHEET` in the code
+- `index.html`: the Phaser page. Phaser 3.90.0 comes from the jsDelivr CDN as a global; `src/main.js` starts the game
+- `src/scenes/`: `Intro.js` (loads assets, title), `Cafe.js` (the room), `UI.js` (overlay)
+- `src/data/`: `drinks.js`, `unlocks.js`, `sounds.js`, `seats.js` (data moved out of the legacy game)
+- `public/legacy.html`: the old one-file game, kept as reference until the rebuild matches it. The section notes below describe this file
+- `public/assets/images/room.webp`: the café room cut out on a transparent background (1054 × 851). All game coordinates are in this image's pixels
+- `public/assets/sprites/witch.png`: PixelLab sprite sheet, 96 × 96 cells
+- `public/assets/sounds/`: looping ambience files (`cafe.mp3`, `cups.mp3`, `rain.mp3`, `waves.mp3`, `fire.mp3`). Missing files show an Add button in the Sounds panel
+- `public/assets/sprites/cat.png` (optional): PixelLab cat sheet, see `CAT_SHEET` in the code
 - `.claude/skills/`: project skills (see below)
 
-## How the code is organised (inside the script)
+## How the legacy code is organised (inside the script of `public/legacy.html`)
 
 Sections are marked with `/* ---- name ---- */` comments, in this order:
 
