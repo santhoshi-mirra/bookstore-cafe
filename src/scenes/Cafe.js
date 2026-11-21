@@ -7,8 +7,10 @@ import { PIECES } from '../data/layout.js';
 import { PROPS, boxes, edgeY } from '../data/props.js';
 import { HATS, OUTFITS } from '../data/unlocks.js';
 import { FX, FY, SC, dirFrom, witchTexture, witchAnims } from '../witch.js';
-import { S } from '../state.js';
-import { ui, toast, hud, updatePops } from '../ui.js';
+import { S, cup, session } from '../state.js';
+import { $, ui, toast, hud, updatePops } from '../ui.js';
+import { tick, canSit, openSit, confirmStand, bindCafe } from '../focus.js';
+import { DRINKS } from '../data/drinks.js';
 import { openIntro } from '../intro.js';
 import { doOrder } from '../shop.js';
 
@@ -66,8 +68,13 @@ export default class Cafe extends Phaser.Scene {
     this.look = { hat: S.char.hat, outfit: S.char.outfit }; // the debug keys change this, not the save
     this.setLook();
 
+    this.mug = this.add.graphics();
+    this.clock = 0; // seconds, for the steam
+
     this.setupInput();
     this.setupDebug();
+    bindCafe(() => this.standUp());
+    $('standBtn').onclick = () => { if (this.seated && !this.busy) this.requestStand(); };
 
     this.fit();
     this.scale.on('resize', this.fit, this);
@@ -172,11 +179,12 @@ export default class Cafe extends Phaser.Scene {
         : x > hx0 && x < hx1 && y > hy0 && y < hy1 && !inPoly(x, y, FLOOR);
       if (!chair && !counter && !inPoly(x, y, FLOOR)) return;
       if (chair && chair === this.seated) return;
+      if (chair && !canSit()) return;
       this.pending = null;
       const go = chair ? () => this.sitOn(chair)
         : counter ? () => this.walkTo(...COUNTER.a, () => this.atCounter())
         : () => this.walkTo(x, y);
-      if (this.seated) this.standUp(go); else go();
+      if (this.seated) this.requestStand(go); else go();
     });
   }
 
@@ -204,15 +212,23 @@ export default class Cafe extends Phaser.Scene {
     doOrder();
   }
 
-  // walk to the chair's approach point, then sit
+  // walk to the chair's approach point, ask what and how long, then sit
   sitOn(piece) {
-    this.walkTo(...PROPS[piece.key].approach, () => this.sit(piece));
+    this.walkTo(...PROPS[piece.key].approach, () => openSit(piece.key, () => this.sit(piece)));
+  }
+
+  // standing up during a focus session ends it without pay, so ask first
+  requestStand(then) {
+    if (session.phase === 'focus') confirmStand(() => this.standUp(then));
+    else this.standUp(then);
   }
 
   // slide from the approach point onto the seat (through the chair's footprint), then sit
   sit(piece) {
     const { seat, face } = PROPS[piece.key];
     this.busy = true; this.posing = true; this.seated = piece; this.dir = face;
+    session.seated = true;
+    hud();
     this.witch.play(`${this.tex}:idle_${face}`);
     this.shadow.setVisible(false);
     this.tweens.add({
@@ -235,6 +251,8 @@ export default class Cafe extends Phaser.Scene {
         targets: this.witch, x: approach[0], y: approach[1], duration: 200,
         onComplete: () => {
           this.seated = null; this.busy = false; this.posing = false;
+          session.seated = false;
+          hud();
           this.shadow.setVisible(true);
           then?.();
         },
@@ -276,6 +294,9 @@ export default class Cafe extends Phaser.Scene {
   update(time, delta) {
     const dt = Math.min(delta, 50) / 1000, k = this.keys;
     this.star.calculate();
+    // the timer uses real time (up to 1/4 s a frame), so a slow frame rate doesn't slow it down
+    tick(Math.min(delta, 250) / 1000);
+    this.clock += dt;
 
     let vx = 0, vy = 0;
     if (k.A.isDown || k.LEFT.isDown) vx -= 1;
@@ -285,7 +306,7 @@ export default class Cafe extends Phaser.Scene {
     // keys stand her up when seated, and do nothing while she's sitting down or standing up,
     // or while the intro or a modal is open
     if (this.busy || ui.busy) vx = vy = 0;
-    else if (this.seated) { if (vx || vy) this.standUp(); vx = vy = 0; }
+    else if (this.seated) { if (vx || vy) this.requestStand(); vx = vy = 0; }
 
     let moving = false;
     if (vx || vy) {
@@ -319,12 +340,37 @@ export default class Cafe extends Phaser.Scene {
     this.witch.setDepth(this.seated ? this.seatDepth(this.seated) : this.standDepth());
     this.shadow.setPosition(this.witch.x, this.witch.y - 1).setDepth(this.witch.depth - 0.01);
 
+    this.drawMug();
+
     // money pops float above her head, in screen pixels
     const cam = this.cameras.main, headY = this.witch.y - (this.seated ? 46 : 63) * SC - 14;
     updatePops(dt, (this.witch.x - cam.worldView.x) * cam.zoom, (headY - cam.worldView.y) * cam.zoom);
   }
 
-  // F2 or Shift+D shows footprints, anchors, front edges, seats, the floor outline, blocked walk cells and her path.
+  // her drink on the table while she's seated: a little pixel mug, rising steam when hot, ice when iced
+  drawMug() {
+    const g = this.mug.clear(), d = DRINKS.find(x => x.id === cup.drink);
+    if (!this.seated || !d) return;
+    const { key } = this.seated, [x, y] = PROPS[key].mug;
+    const table = PIECES.find(p => p.key === (key.startsWith('armchair') ? 'coffee_table' : `table_${key[6]}`));
+    g.setDepth(table.y + 0.2);
+    const full = cup.level > 0.02;
+    g.fillStyle(0x3b302a).fillRect(x - 5, y - 8, 10, 9).fillRect(x + 5, y - 6, 3, 5);
+    g.fillStyle(cup.iced ? 0xe8f4fb : 0xffffff).fillRect(x - 4, y - 7, 8, 7);
+    g.fillStyle(0xffffff).fillRect(x + 5, y - 5, 1, 3);
+    if (full) g.fillStyle(Phaser.Display.Color.HexStringToColor(d.c).color).fillRect(x - 4, y - 7, 8, 2);
+    if (full && cup.iced) g.fillStyle(0xffffff).fillRect(x - 3, y - 6, 2, 2).fillRect(x + 1, y - 5, 2, 2);
+    if (!full || cup.iced) return;
+    // three wisps that rise, sway and fade
+    for (let i = 0; i < 3; i++) {
+      const ph = (this.clock * .55 + i / 3) % 1, bx = x - 3 + i * 3, by = y - 9 - ph * 22;
+      const pts = [];
+      for (let k = 0; k <= 8; k++) pts.push({ x: bx + Math.sin(k * .7 + this.clock * 2.2 + i) * 1.8, y: by - k * 1.6 });
+      g.lineStyle(1.6, 0xffffff, Math.sin(ph * Math.PI) * .75).strokePoints(pts);
+    }
+  }
+
+  // F2 or Shift+D shows footprints, anchors, front edges, seats, mugs, the floor outline, blocked walk cells and her path.
   // While it's on: H cycles hat colours, O cycles outfit colours, X plays the sit animation.
   setupDebug() {
     const g = this.add.graphics().setDepth(10000).setVisible(false);
@@ -347,6 +393,7 @@ export default class Cafe extends Phaser.Scene {
         g.lineStyle(1, BUTTER, 1).lineBetween(...s.approach, ...s.seat);
         g.fillStyle(BUTTER, 1).fillCircle(...s.approach, 3);
         g.fillStyle(SAGE, 1).fillCircle(...s.seat, 3.5);
+        if (s.mug) g.lineStyle(1, ROSE, 1).strokeRect(s.mug[0] - 5, s.mug[1] - 8, 10, 9);
       }
     }
     this.debug = g;

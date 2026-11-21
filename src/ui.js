@@ -1,5 +1,5 @@
 // HTML UI helpers shared by the intro, the café and the modals (legacy "UI" section).
-import { S, cup, hasDrink, streak, todayKey, mins, fmt } from './state.js';
+import { S, cup, hasDrink, session, FOCUS, BREAK, taskEntry, streak, todayKey, mins, fmt } from './state.js';
 import { DRINKS, money } from './data/drinks.js';
 import { BAGS, ITEMS } from './data/unlocks.js';
 
@@ -40,16 +40,48 @@ export function hud() {
   f.style.height = (d ? Math.round(cup.level * 100) : 0) + '%';
   f.style.background = d ? d.c : 'var(--sage)';
   $('dName').textContent = d ? drinkName() : 'No drink yet';
-  $('dSub').textContent = !d ? 'Visit the counter to order' : !hasDrink() ? 'Empty. Grab a refill' : 'Full · pick a seat to start';
+  $('dSub').textContent = !d ? 'Visit the counter to order' : !hasDrink() ? 'Empty. Grab a refill'
+    : session.phase === 'focus' ? `${Math.round(cup.level * 100)}% left · finishes with your session` : 'Full · pick a seat to start';
   const items = S.char.items.map(i => ITEMS.find(x => x.id === i).n.toLowerCase()).join(', ');
   $('bagLine').innerHTML = `<img src="assets/icons/${S.char.bag}.png" alt=""><span>${BAGS[S.char.bag].n} · ${items || 'empty'}</span>`;
+  $('standBtn').style.display = session.seated ? 'inline-flex' : 'none';
+  $('standSep').style.display = session.seated ? 'block' : 'none';
   pomoUI();
 }
 
-// the top half of the timer card. Sessions and breaks arrive in step 3
+const DOING = { read: 'reading', study: 'studying', work: 'working', chill: 'chilling' };
+// the top half of the timer card: phase, time left, progress bar and the task
 export function pomoUI() {
-  $('pTime').textContent = fmt(S.quick ? 20 : S.len * 60);
-  $('pTask').textContent = hasDrink() ? 'Pick a seat to start focusing' : 'Order a drink, then pick a seat';
+  const { phase, pt, task } = session, ph = $('pPhase'), bar = $('pBar'), cb = $('pTaskCb');
+  if (phase === 'focus') {
+    ph.className = 'lbl focus';
+    ph.lastChild.textContent = `Focus · ${DOING[session.activity]}`;
+    $('pTime').textContent = fmt(FOCUS() - pt);
+    bar.style.width = (pt / FOCUS() * 100) + '%';
+    bar.className = '';
+  } else if (phase === 'break') {
+    ph.className = 'lbl brk';
+    ph.lastChild.textContent = 'Break';
+    $('pTime').textContent = fmt(BREAK() - pt);
+    bar.style.width = (pt / BREAK() * 100) + '%';
+    bar.className = 'brk';
+  } else {
+    ph.className = 'lbl';
+    ph.lastChild.textContent = 'Ready when you are';
+    $('pTime').textContent = fmt(S.quick ? 20 : S.len * 60);
+    bar.style.width = '0';
+    bar.className = '';
+  }
+  if (task) {
+    cb.style.display = '';
+    $('pTask').textContent = task;
+    cb.checked = !!taskEntry(task)?.done;
+  } else {
+    cb.style.display = 'none';
+    $('pTask').textContent = phase === 'break' ? 'Rest, get a refill or pet the cat'
+      : hasDrink() ? 'Pick a seat to start focusing' : 'Order a drink, then pick a seat';
+  }
+  $('pTaskWrap').classList.toggle('done', !!task && cb.checked);
 }
 
 // −$3.00 / +$10.00 pops that float up above her head for 2 s. The café moves them every frame

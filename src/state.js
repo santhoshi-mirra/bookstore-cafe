@@ -44,3 +44,11 @@ export const mins = m => m >= 60 ? `${Math.floor(m / 60)}h ${Math.round(m % 60)}
 // level goes from 1 (full) to 0 over a focus session
 export const cup = { drink: null, iced: false, level: 0 };
 export const hasDrink = () => cup.drink !== null && cup.level > 0.02;
+
+// the focus timer (not saved). phase: 'ready' | 'focus' | 'break'. pt = seconds into the phase.
+// seated = she's sitting on a chair (set by the café)
+export const session = { phase: 'ready', pt: 0, len: 20, activity: 'study', task: '', seated: false };
+export const FOCUS = () => S.quick ? 20 : session.len * 60;
+export const BREAK = () => S.quick ? 10 : 600;
+// today's entry for a task, if there is one
+export const taskEntry = t => S.tasks.filter(x => x.t === t && x.d === todayKey()).pop();

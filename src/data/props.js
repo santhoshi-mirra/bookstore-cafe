@@ -2,6 +2,7 @@
 // collide: floor footprint in room pixels, centred on the anchor x with its bottom edge on the anchor y.
 //   dx, dy nudge the box; a list of boxes is allowed for diagonal pieces (display case, counter).
 // seat: where her feet go when seated. approach: walkable spot she walks to first. face: sitting direction.
+//   mug: where her drink stands on the table (or the coffee table, for the armchairs).
 //   depth (optional): her depth while seated, when the default (just above or below the chair) is wrong.
 //   chair_3_sw needs it to sit in front of the lamp cabinet, and chair_3_nw is approached from the side
 //   because it backs onto the railing.
@@ -11,9 +12,9 @@
 // Only chairs that exist in layout.js have a seat (table 2 has no ne chair).
 export const PROPS = {
   // reading corner
-  armchair_l:   { collide: { w: 84, h: 44 }, seat: [227, 478], approach: [272, 506], face: 'se',
+  armchair_l:   { collide: { w: 84, h: 44 }, seat: [227, 478], approach: [272, 506], face: 'se', mug: [300, 458],
                   front: [[170, 491], [212, 507], [268, 482]] },
-  armchair_r:   { collide: { w: 80, h: 40 }, seat: [391, 458], approach: [358, 486], face: 'sw',
+  armchair_r:   { collide: { w: 80, h: 40 }, seat: [391, 458], approach: [358, 486], face: 'sw', mug: [328, 455],
                   front: [[350, 452], [398, 473], [436, 458]] },
   // the second box closes the gap to armchair_l, which is too narrow for her
   coffee_table: { collide: [{ w: 64, h: 30 }, { w: 26, h: 24, dx: -40, dy: 2 }],
@@ -26,21 +27,21 @@ export const PROPS = {
                   front: [[147, 568], [213, 602], [235, 601]] },
   // window table
   table_1:      { collide: { w: 56, h: 28 } },
-  chair_1_se:   { collide: { w: 30, h: 16 }, seat: [368, 574], approach: [330, 572], face: 'se' },
-  chair_1_sw:   { collide: { w: 30, h: 16 }, seat: [485, 578], approach: [520, 576], face: 'sw' },
-  chair_1_ne:   { collide: { w: 44, h: 26 }, seat: [369, 632], approach: [378, 662], face: 'ne' },
-  chair_1_nw:   { collide: { w: 44, h: 26 }, seat: [496, 632], approach: [488, 662], face: 'nw' },
+  chair_1_se:   { collide: { w: 30, h: 16 }, seat: [368, 574], approach: [330, 572], face: 'se', mug: [401, 550] },
+  chair_1_sw:   { collide: { w: 30, h: 16 }, seat: [485, 578], approach: [520, 576], face: 'sw', mug: [450, 550] },
+  chair_1_ne:   { collide: { w: 44, h: 26 }, seat: [369, 632], approach: [378, 662], face: 'ne', mug: [410, 560] },
+  chair_1_nw:   { collide: { w: 44, h: 26 }, seat: [496, 632], approach: [488, 662], face: 'nw', mug: [448, 560] },
   // middle table (three chairs)
   table_2:      { collide: { w: 56, h: 28 } },
-  chair_2_se:   { collide: { w: 40, h: 22 }, seat: [590, 578], approach: [552, 592], face: 'se' },
-  chair_2_sw:   { collide: { w: 28, h: 14 }, seat: [688, 540], approach: [722, 540], face: 'sw' },
-  chair_2_nw:   { collide: { w: 44, h: 24 }, seat: [698, 590], approach: [700, 618], face: 'nw' },
+  chair_2_se:   { collide: { w: 40, h: 22 }, seat: [590, 578], approach: [552, 592], face: 'se', mug: [613, 515] },
+  chair_2_sw:   { collide: { w: 28, h: 14 }, seat: [688, 540], approach: [722, 540], face: 'sw', mug: [654, 515] },
+  chair_2_nw:   { collide: { w: 44, h: 24 }, seat: [698, 590], approach: [700, 618], face: 'nw', mug: [654, 525] },
   // corner table (four chairs) and the side cabinet with its lamp
   table_3:      { collide: { w: 56, h: 28 } },
-  chair_3_se:   { collide: { w: 30, h: 16 }, seat: [853, 544], approach: [818, 548], face: 'se' },
-  chair_3_sw:   { collide: { w: 28, h: 14 }, seat: [962, 542], approach: [940, 540], face: 'sw', depth: 551 },
-  chair_3_ne:   { collide: { w: 44, h: 26 }, seat: [851, 572], approach: [850, 602], face: 'ne' },
-  chair_3_nw:   { collide: { w: 44, h: 26 }, seat: [966, 572], approach: [914, 587], face: 'nw' },
+  chair_3_se:   { collide: { w: 30, h: 16 }, seat: [853, 544], approach: [818, 548], face: 'se', mug: [884, 498] },
+  chair_3_sw:   { collide: { w: 28, h: 14 }, seat: [962, 542], approach: [940, 540], face: 'sw', mug: [930, 498], depth: 551 },
+  chair_3_ne:   { collide: { w: 44, h: 26 }, seat: [851, 572], approach: [850, 602], face: 'ne', mug: [888, 508] },
+  chair_3_nw:   { collide: { w: 44, h: 26 }, seat: [966, 572], approach: [914, 587], face: 'nw', mug: [924, 508] },
   // a long diagonal piece: the second box covers its left end, which the first one missed
   lamp_table_r: { collide: [{ w: 36, h: 60, dx: 20 }, { w: 22, h: 21, dx: -8, dy: -33 }],
                   front: [[921, 494], [980, 553], [995, 550]] },

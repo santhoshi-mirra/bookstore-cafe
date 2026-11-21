@@ -41,7 +41,9 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:2px solid v
 .time{font:600 clamp(40px,4.4vw,52px)/1 Fraunces,serif;letter-spacing:-.02em;margin:8px 0 12px;font-variant-numeric:tabular-nums}
 .bar{height:6px;border-radius:3px;background:var(--hover);overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--sage);border-radius:3px;transition:width .3s}
 .bar i.brk{background:var(--rose)}
-.task{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:14px;min-height:24px}
+.task{display:flex;gap:10px;align-items:center;margin-top:12px;font-size:14px;min-height:24px;cursor:pointer}
+.task input{width:18px;height:18px;accent-color:var(--sage-d);margin:0;flex:none}
+.task.done span{text-decoration:line-through;color:var(--mut)}
 .drink{display:flex;gap:12px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .cup{width:28px;height:34px;border:2px solid var(--ink);border-radius:4px 4px 9px 9px;position:relative;overflow:hidden;flex:none}
 .cup i{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--sage);transition:height .4s}
@@ -70,6 +72,26 @@ button.mi{cursor:pointer}button.mi:hover{background:var(--hover)}
 .mi .opts .p{margin-right:6px}
 .mi.lockd{color:var(--mut)}
 .foot{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:14px}
+.lab+.row{margin-top:7px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:7px 0 4px}
+.row .btn{min-height:38px;padding:0 14px}
+input[type=text],input[type=number]{width:100%;font:500 15px 'DM Sans';padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);margin-top:6px}
+input[type=number]{width:110px;margin:0}
+.custom{display:none;align-items:center;gap:10px;margin-top:8px;font-size:14px}
+.custom.on{display:flex}
+.check{display:flex;align-items:center;gap:10px;font-size:14px;min-height:40px}
+.check input{width:18px;height:18px;accent-color:var(--sage-d)}
+.tasks{display:grid;gap:4px;margin:6px 0}
+.tasks label{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;font-size:14px}
+.tasks label:hover{background:var(--hover)}
+.tasks input{width:18px;height:18px;accent-color:var(--sage-d)}
+.tasks .done{text-decoration:line-through;color:var(--mut)}
+.big{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+.big div{background:var(--bg);border-radius:16px;padding:12px;text-align:center}
+.big b{display:block;font:600 26px/1.1 Fraunces,serif}
+.big span{font-size:12px;color:var(--mut)}
+.paused{position:fixed;inset:0;display:none;place-items:center;background:#1e1a24b0;color:#fff;text-align:center;z-index:4}
+.paused h2{font:600 34px Fraunces,serif;margin:0 0 6px}
 .pop{position:fixed;left:0;top:0;z-index:3;pointer-events:none;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #ece4d8;border-radius:999px;padding:5px 16px 5px 6px;font:600 18px 'DM Sans',sans-serif;box-shadow:0 3px 12px #3b302a2e;white-space:nowrap;opacity:0}
 .pop i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 13px 'DM Sans',sans-serif;font-style:normal;color:#8a5f12;background:radial-gradient(circle at 40% 35%,#ffe9a3 0,#f2c14e 60%,#d39a2a 100%);border:1.5px solid #b8862a}
 .lab{font-weight:600;font-size:13px;color:var(--mut);margin-top:12px}
@@ -159,19 +181,65 @@ button.mi{cursor:pointer}button.mi:hover{background:var(--hover)}
   <div class="lbl" id="pPhase"><b></b><span>Ready when you are</span></div>
   <div class="time" id="pTime">20:00</div>
   <div class="bar"><i id="pBar"></i></div>
-  <div class="task"><span id="pTask">Order a drink, then pick a seat</span></div>
+  <label class="task" id="pTaskWrap"><input type="checkbox" id="pTaskCb" style="display:none"><span id="pTask">Order a drink, then pick a seat</span></label>
   <div class="drink"><div class="cup" aria-hidden="true"><i id="cupFill"></i></div><div><b id="dName">No drink yet</b><small id="dSub">Visit the counter to order</small></div></div>
   <div class="bagline" id="bagLine"></div>
 </section>
 
 <nav class="dock" aria-label="Controls">
+  <button class="ib" id="todayBtn" aria-label="Your day" title="Your day"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></button>
   <button class="ib" id="shopBtn" aria-label="Unlocks" title="Unlocks"><svg viewBox="0 0 24 24"><use href="#lock"/></svg></button>
+  <button class="ib" id="setBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6a7 7 0 0 0 0 2.4l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"/></svg></button>
+  <span class="sep" id="standSep" style="display:none"></span>
+  <button class="btn rose" id="standBtn" style="display:none">Stand up</button>
 </nav>
+<div class="paused" id="paused"><div><h2>Timer paused</h2><p>Come back to this tab to keep going.</p></div></div>
 
 <div class="modal" id="mOrder"><div class="card">
   <h2>Menu</h2><p class="sub">Each focus session needs a drink. You'll finish it by the end.</p>
   <div class="menu" id="menu"></div>
   <div class="foot"><button class="btn" id="orderClose">Not now</button></div>
+</div></div>
+
+<div class="modal" id="mSit"><div class="card">
+  <h2>Settle in</h2><p class="sub" id="sitSub"></p>
+  <div class="lab" style="margin-top:0">What are you doing?</div>
+  <div class="row" id="optAct"></div>
+  <div class="lab">How long?</div>
+  <div class="row" id="optLen"></div>
+  <div class="custom" id="customWrap"><input type="number" id="customMin" min="5" max="180" step="5" value="25"> minutes <span id="customErr" style="color:var(--rose-d);font-size:13px"></span></div>
+  <div class="lab">What are you working on? <span style="font-weight:400">(optional)</span></div>
+  <input type="text" id="taskIn" maxlength="80" placeholder="Finish chapter 3 notes">
+  <p class="note" id="sitNote"></p>
+  <div class="foot"><button class="btn" id="sitCancel">Cancel</button><button class="btn go" id="sitGo">Start</button></div>
+</div></div>
+
+<div class="modal" id="mStand"><div class="card">
+  <h2>Leave your seat?</h2><p class="sub" id="standTxt"></p>
+  <div class="foot"><button class="btn" id="standNo">Keep going</button><button class="btn rose" id="standYes">Stand up</button></div>
+</div></div>
+
+<div class="modal" id="mDone"><div class="card">
+  <h2>Session complete</h2><p class="sub" id="doneTxt"></p>
+  <label class="check" id="doneTaskWrap"><input type="checkbox" id="doneTask"> <span id="doneTaskTxt"></span></label>
+  <h3>Take a break to rest?</h3>
+  <p class="sub" style="margin:0">A 10-minute break helps you come back fresh. Grab a refill, stretch or pet the cat.</p>
+  <div class="foot"><button class="btn" id="doneSkip">Skip break</button><button class="btn go" id="doneBreak">Start 10-min break</button></div>
+</div></div>
+
+<div class="modal" id="mToday"><div class="card">
+  <h2>Your day</h2>
+  <div class="big"><div><b id="tdMin">0m</b><span>focused today</span></div><div><b id="tdSes">0</b><span>sessions</span></div><div><b id="tdStreak">0</b><span>day streak</span></div></div>
+  <div class="lab">Today's tasks</div>
+  <div class="tasks" id="taskList"></div>
+  <div class="foot"><button class="btn" id="todayClose">Close</button></div>
+</div></div>
+
+<div class="modal" id="mSet"><div class="card">
+  <h2>Settings</h2>
+  <label class="check"><input type="checkbox" id="quick"> Test mode: 20-second focus, 10-second break (earns nothing)</label>
+  <p class="note">Switching tabs pauses a focus session. Leaving your seat early ends it without pay.</p>
+  <div class="foot"><button class="btn go" id="setClose">Done</button></div>
 </div></div>
 
 <div class="modal" id="mShop"><div class="card">
