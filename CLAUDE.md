@@ -27,6 +27,7 @@ The new Phaser game is at `/`, the old one at `/legacy.html`. Always use the dev
 - `public/assets/images/room.webp`: the café room cut out on a transparent background (1054 × 851). All game coordinates are in this image's pixels
 - `public/assets/sprites/witch.png`: PixelLab sprite sheet, 96 × 96 cells
 - `public/assets/sounds/`: looping ambience files (`cafe.mp3`, `cups.mp3`, `rain.mp3`, `waves.mp3`, `fire.mp3`). Missing files show an Add button in the Sounds panel
+- `public/assets/icons/`: bag and packing item icons for the intro (transparent PNGs, different sizes)
 - `public/assets/sprites/cat.png` (optional): PixelLab cat sheet, see `CAT_SHEET` in the code
 - `.claude/skills/`: project skills (see below)
 
@@ -134,6 +135,8 @@ The current version uses one painted room image and hand-traced polygons for wal
 
 ### Phase 6: port the game features
 Port everything listed under Game rules and Design rules: intro (makeover, bag, packing animation), menu with hot/iced, money pops above her head, timers (20/35/45/60/custom), break pop-up, steam on the mug, unlocks with lock icon, night mode, sounds mixer, cat petting, streaks and tasks, drag and zoom camera (Phaser camera with bounds and zoom 1 to 1.7). The HTML UI (timer card, dock, modals) can stay as HTML on top of the Phaser canvas.
+- Intro icons: the bag picker and packing screen must use the PNGs in `public/assets/icons/` (bags: backpack, satchel, crossbody, tote; items: pen, book, phone, laptop, notebook, pencils, headphones, makeup). The source files range from 269 to 362 px square, so scale them all to one display size
+- Packed items look selected, not faded: a sage (`#8fc29a`) border and a small check mark
 
 ### Phase 7: later
 - Bag sprite variants, the witch boy, barista and customers, PixelLab cat
