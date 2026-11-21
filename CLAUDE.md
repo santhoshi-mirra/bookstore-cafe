@@ -1,5 +1,11 @@
 # Lunaria
 
+> **Next session, before Phase 6 step 4:** build a seat-and-mug placement tool in the debug view (F2).
+> When she's seated with debug on, Mirra drags her (or nudges her with the arrow keys) to the spot that
+> looks right and drags the mug onto the tabletop, then presses S to save both (`seat` and `mug`) into
+> `src/data/props.js`. Mirra will place every chair and armchair herself by eye, so don't tune seats by hand.
+> Phase 6 steps 1–3 are done (intro, counter/menu/money, focus sessions and breaks).
+
 A cozy pixel-art focus café in the browser. The player does a makeover, picks a bag, packs it, then walks a witch into Lunaria (an isometric café and bookstore), buys a drink at the counter, sits down and focuses (20, 35, 45, 60 min or custom) to earn money that unlocks drinks, bags and hat colours.
 
 Owner: Mirra. This is a fun side project, built mostly with Claude Code.
