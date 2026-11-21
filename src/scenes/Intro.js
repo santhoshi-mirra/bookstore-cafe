@@ -8,6 +8,7 @@ export default class Intro extends Phaser.Scene {
     this.load.image('room', 'assets/images/room.webp');
     PIECES.forEach(p => this.load.image(p.key, `assets/furniture/${p.key}.png`));
     this.load.spritesheet('witch', 'assets/sprites/witch.png', { frameWidth: 96, frameHeight: 96 });
+    this.load.image('witch_cardigan', 'assets/sprites/witch_cardigan.png');
   }
 
   create() {
