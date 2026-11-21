@@ -7,17 +7,131 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:light;--bg:#fbf7f1;--bg2:#f4ece1;--card:#ffffff;--ink:#3b302a;--mut:#8b7f76;--line:#ece4d8}
-html[data-night]{color-scheme:dark;--bg:#2a2433;--bg2:#221d2a;--card:#352e40;--ink:#f6eee4;--mut:#c4b8ad;--line:#4a4155}
-*{box-sizing:border-box}
+/* Ported from legacy.html. The HTML UI sits on top of the Phaser canvas (#game). */
+:root{color-scheme:light;--bg:#fbf7f1;--bg2:#f4ece1;--card:#ffffff;--ink:#3b302a;--mut:#8b7f76;--line:#ece4d8;--sage:#8fc29a;--sage-d:#4f8a5a;--sage-bg:#e5f2e7;--rose:#f2a3b6;--rose-d:#c4546f;--rose-bg:#fde9ee;--butter:#f6d46e;--lav:#b5a4f0;--lav-bg:#efeafd;--hover:#f5efe6}
+html[data-night]{color-scheme:dark;--bg:#2a2433;--bg2:#221d2a;--card:#352e40;--ink:#f6eee4;--mut:#c4b8ad;--line:#4a4155;--sage-bg:#34473a;--rose-bg:#523343;--lav-bg:#3f3858;--hover:#40384c}
+*{box-sizing:border-box;min-width:0}
 html,body{height:100%;margin:0}
-body{background:radial-gradient(ellipse at 50% 55%,var(--bg) 0,var(--bg) 50%,var(--bg2) 100%) fixed;color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;overflow:hidden}
+body{background:radial-gradient(ellipse at 50% 55%,var(--bg) 0,var(--bg) 50%,var(--bg2) 100%) fixed;color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;overflow:hidden;transition:background-color .4s}
+button{font-family:inherit}
 #game{position:fixed;inset:0}
 #game canvas{display:block}
+.top{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px clamp(14px,3vw,36px) 6px;flex-wrap:wrap;pointer-events:none;z-index:2}
+.logo{display:flex;align-items:center;gap:10px;font:600 clamp(22px,2.6vw,28px)/1 Fraunces,serif;letter-spacing:-.01em;margin:0}
+.logo svg{width:24px;height:24px}
+.logo i{font-weight:400;color:var(--mut);font-size:.62em;margin-left:2px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;pointer-events:auto}
+.pill{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-weight:500;font-size:14px;white-space:nowrap}
+.pill .d{width:9px;height:9px;border-radius:50%}
+.ib svg,.btn svg,.ico{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:500 14px 'DM Sans',sans-serif;min-height:42px;border-radius:999px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn.go{background:var(--sage-d);border-color:var(--sage-d);color:#fff}.btn.go:hover{filter:brightness(1.07)}
+.btn.rose{background:var(--rose-bg);border-color:transparent;color:var(--rose-d)}
+.btn.sel{background:var(--sage-bg);border-color:var(--sage);color:var(--ink)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,label:focus-visible{outline:2px solid var(--sage-d);outline-offset:2px}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);color:var(--ink);padding:9px 16px;border-radius:999px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;max-width:min(520px,70%);z-index:3;box-shadow:0 8px 20px #3b302a17}
+.toast.on{opacity:1}
+.lab{font-weight:600;font-size:13px;color:var(--mut);margin-top:12px}
+.note{font-size:13px;color:var(--mut);margin:8px 0 0}
+/* intro */
+.intro{position:fixed;inset:0;z-index:20;background:radial-gradient(ellipse at 50% 40%,var(--card) 0,var(--bg) 55%,var(--bg2) 100%);display:grid;place-items:center;padding:16px;overflow:auto;transition:opacity .5s}
+.intro.hide{opacity:0;pointer-events:none}
+.intro.loading .iwrap{visibility:hidden}
+.iwrap{width:min(920px,100%)}
+.ihead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.steps{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--mut);font-weight:500}
+.steps span{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px}
+.steps span.on{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.steps span i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;background:var(--line);color:var(--ink)}
+.steps span.on i{background:var(--sage-d);color:#fff}
+.steps span.done i{background:var(--sage);color:#fff}
+.ibody{background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:0 20px 50px #3b302a14;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);min-height:440px;overflow:hidden}
+.vis{background:var(--bg2);display:grid;place-items:center;position:relative;padding:20px;min-height:300px}
+.vis canvas{width:min(300px,80%);image-rendering:pixelated}
+.vis .halo{position:absolute;width:62%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--card) 0,transparent 70%)}
+.ctl{padding:26px 28px;display:flex;flex-direction:column}
+.ctl h2{font:600 30px/1.1 Fraunces,serif;margin:0 0 6px}
+.ctl p.sub{margin:0 0 16px;color:var(--mut)}
+.sws{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 6px}
+.sw{width:40px;height:40px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;position:relative}
+.sw.sel{box-shadow:0 0 0 2px var(--ink)}
+.sw[disabled]{cursor:not-allowed}
+.sw[disabled]::after{content:'';position:absolute;inset:-3px;border-radius:50%;background:#ffffffb0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b302a' stroke-width='2' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center/16px no-repeat}
+.swname{font-size:13px;color:var(--mut);min-height:20px}
+.bags{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:6px 0}
+.bagc{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--ink);font:500 14px 'DM Sans'}
+.bagc:hover{background:var(--hover)}
+.bagc.sel{border-color:var(--sage);background:var(--sage-bg)}
+.bagc img{width:76px;height:76px;object-fit:contain}
+.bagc small{color:var(--mut);font-size:12px;display:flex;align-items:center;gap:4px}
+.bagc small .ico{width:13px;height:13px}
+.bagc[disabled]{cursor:not-allowed}
+.bagc[disabled] img{opacity:.45}
+.items{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0}
+.itm{position:relative;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--ink);font:500 12px 'DM Sans'}
+.itm:hover{background:var(--hover)}
+.itm img{width:44px;height:44px;object-fit:contain}
+.itm.in{border-color:var(--sage);box-shadow:inset 0 0 0 1px var(--sage)}
+.itm .ck{position:absolute;top:6px;right:6px;width:18px;height:18px;padding:3px;border-radius:50%;background:var(--sage);fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;display:none}
+.itm.in .ck{display:block}
+.packed{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;position:absolute;bottom:18px;left:12px;right:12px}
+.packed span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:500}
+.bigbag{width:min(240px,70%);transform-origin:50% 90%;position:relative}
+.bigbag.wig{animation:wig .45s ease}
+@keyframes wig{0%,100%{transform:rotate(0) scale(1)}30%{transform:rotate(-4deg) scale(1.04)}60%{transform:rotate(3deg) scale(.98)}}
+.fly{position:fixed;z-index:30;pointer-events:none;width:44px;height:44px;object-fit:contain}
+.ifoot{margin-top:auto;padding-top:16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.letsgo{font:600 26px Fraunces,serif;text-align:center;position:absolute;top:22px;left:0;right:0;opacity:0;transition:opacity .4s}
+.letsgo.on{opacity:1}
+@media(max-width:760px){
+  .pill{font-size:12px;padding:5px 10px}
+  .toast{top:84px;max-width:90%;border-radius:16px}
+  .ibody{grid-template-columns:1fr}.vis{min-height:220px}
+}
+@media(prefers-reduced-motion:reduce){.toast,body,.intro{transition:none}.bigbag.wig{animation:none}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+</svg>
+
 <div id="game"></div>
+
+<header class="top">
+  <h1 class="logo"><svg viewBox="0 0 24 24" fill="#f6d46e" stroke="#3b302a" stroke-width="1.5"><use href="#moon"/></svg>Lunaria</h1>
+  <div class="pills">
+    <div class="pill" title="Money"><span class="d" style="background:var(--butter)"></span><span id="money">$6.00</span></div>
+    <div class="pill" title="Daily streak"><span class="d" style="background:var(--rose)"></span><span id="streak">0-day streak</span></div>
+    <div class="pill" title="Focused today"><span class="d" style="background:var(--sage)"></span><span id="today">0m today</span></div>
+  </div>
+</header>
+<div class="toast" id="toast" role="status"></div>
+
+<!-- intro: shown over the café until "Let's go" -->
+<div class="intro loading" id="intro">
+  <div class="iwrap">
+    <div class="ihead">
+      <h1 class="logo"><svg viewBox="0 0 24 24" fill="#f6d46e" stroke="#3b302a" stroke-width="1.5"><use href="#moon"/></svg>Lunaria <i>café and bookstore</i></h1>
+      <div class="steps" id="steps"><span><i>1</i>Makeover</span><span><i>2</i>Bag</span><span><i>3</i>Pack</span></div>
+    </div>
+    <div class="ibody">
+      <div class="vis">
+        <div class="halo"></div>
+        <canvas id="bigPrev" width="96" height="96" style="position:relative"></canvas>
+        <div id="bagVis" style="display:none;position:relative;width:100%;height:100%;place-items:center"></div>
+        <div class="letsgo" id="letsgo">Let's go to the café!</div>
+        <div class="packed" id="packedList"></div>
+      </div>
+      <div class="ctl" id="ctl"></div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
 <script type="module" src="/src/main.js"></script>
 </body>

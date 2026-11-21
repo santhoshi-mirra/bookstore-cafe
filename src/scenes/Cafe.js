@@ -7,6 +7,9 @@ import { PIECES } from '../data/layout.js';
 import { PROPS, boxes, edgeY } from '../data/props.js';
 import { HATS, OUTFITS } from '../data/unlocks.js';
 import { FX, FY, SC, dirFrom, witchTexture, witchAnims } from '../witch.js';
+import { S } from '../state.js';
+import { ui, toast } from '../ui.js';
+import { openIntro } from '../intro.js';
 
 const ROOM_W = 1054, ROOM_H = 851;
 const GS = 8, GW = Math.ceil(ROOM_W / GS), GH = Math.ceil(ROOM_H / GS); // walk grid
@@ -23,16 +26,6 @@ function inPoly(x, y, poly) {
     if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
   }
   return c;
-}
-
-// hat and outfit from the legacy save until the makeover is ported (Phase 6)
-function savedLook() {
-  try {
-    const c = JSON.parse(localStorage.getItem('lunaria-v1'))?.char || {};
-    return { hat: HATS[c.hat] ? c.hat : 'purple', outfit: OUTFITS[c.outfit] ? c.outfit : 'cream' };
-  } catch (e) {
-    return { hat: 'purple', outfit: 'cream' };
-  }
 }
 
 export default class Cafe extends Phaser.Scene {
@@ -68,7 +61,7 @@ export default class Cafe extends Phaser.Scene {
     this.pending = null; // chair she's walking to
     this.seated = null;  // chair she's sitting on
     this.busy = false;   // sitting down or standing up, ignore input
-    this.look = savedLook();
+    this.look = { hat: S.char.hat, outfit: S.char.outfit }; // the debug keys change this, not the save
     this.setLook();
 
     this.setupInput();
@@ -77,6 +70,20 @@ export default class Cafe extends Phaser.Scene {
     this.fit();
     this.scale.on('resize', this.fit, this);
     this.events.once('shutdown', () => this.scale.off('resize', this.fit, this));
+
+    openIntro(this, () => this.enter());
+  }
+
+  // after the intro: dress her in the chosen look and walk her in through the door
+  enter() {
+    this.look = { hat: S.char.hat, outfit: S.char.outfit };
+    this.setLook();
+    if (!this.seated) {
+      this.witch.setPosition(DOOR[0], DOOR[1]);
+      this.dir = 'n';
+      this.goTo(DOOR[0] - 10, DOOR[1] - 60);
+    }
+    toast('Welcome to Lunaria! Order a drink at the counter first');
   }
 
   // can her feet stand here? On the floor and not overlapping any furniture footprint
@@ -146,11 +153,12 @@ export default class Cafe extends Phaser.Scene {
   }
 
   setupInput() {
-    this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SHIFT');
+    // no key capture, so the keys still type into the HTML inputs
+    this.keys = this.input.keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SHIFT', false);
     // a click on a chair sits her down there; clicks outside the floor (walls, shelves,
     // outside the room) do nothing. Chair backs can stick out past the floor, so check chairs first
     this.input.on('pointerdown', ptr => {
-      if (this.busy) return;
+      if (this.busy || ui.busy) return;
       const x = ptr.worldX, y = ptr.worldY, chair = this.seatAt(x, y);
       if (!chair && !inPoly(x, y, FLOOR)) return;
       if (chair && chair === this.seated) return;
@@ -247,8 +255,9 @@ export default class Cafe extends Phaser.Scene {
     if ((k.D.isDown && !k.SHIFT.isDown) || k.RIGHT.isDown) vx += 1;
     if (k.W.isDown || k.UP.isDown) vy -= 1;
     if (k.S.isDown || k.DOWN.isDown) vy += 1;
-    // keys stand her up when seated, and do nothing while she's sitting down or standing up
-    if (this.busy) vx = vy = 0;
+    // keys stand her up when seated, and do nothing while she's sitting down or standing up,
+    // or while the intro or a modal is open
+    if (this.busy || ui.busy) vx = vy = 0;
     else if (this.seated) { if (vx || vy) this.standUp(); vx = vy = 0; }
 
     let moving = false;
@@ -312,7 +321,7 @@ export default class Cafe extends Phaser.Scene {
     this.debug = g;
     this.pathG = this.add.graphics().setDepth(10001).setVisible(false);
 
-    const toggle = () => { g.setVisible(!g.visible); this.pathG.setVisible(g.visible); };
+    const toggle = () => { if (ui.busy) return; g.setVisible(!g.visible); this.pathG.setVisible(g.visible); };
     const kb = this.input.keyboard;
     kb.on('keydown-F2', toggle);
     kb.on('keydown-D', e => { if (e.shiftKey) toggle(); });
