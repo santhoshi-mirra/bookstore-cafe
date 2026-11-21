@@ -117,6 +117,7 @@ The current version uses one painted room image and hand-traced polygons for wal
 - Load `witch.png` as a spritesheet (96 × 96 frames) and create animations from the rows in the sprite table above: walk in 8 directions, idle from the rotation row, sit in each direction
 - Movement: click-to-move with pathfinding over a walk grid built from the collision bodies (use `easystarjs`), plus WASD
 - Hat and cardigan recolouring: keep the hue-swap code, run it once on a canvas and add the result as a new texture
+- The cardigan recolour also recolours the tote bag, because both are the same cream colour. Fix it by recolouring only the cardigan pixels: use a mask or a pixel region per frame, not just a colour range, so the bag keeps its own colour
 
 ### Phase 5: seats
 - Each chair piece has a `seat` (where her feet go when seated), an `approach` point and a `face` direction
