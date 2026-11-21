@@ -57,6 +57,9 @@ export const PROPS = {
   lamp_post_1:  { collide: { w: 56, h: 24, dy: 8 } },
   lamp_post_2:  { collide: { w: 56, h: 24, dy: 8 } },
   lamp_post_3:  { collide: { w: 54, h: 24, dy: 8 } },
+  // she's in front of the arch on the doormat (and outside), behind it anywhere inside the café.
+  // The edge is the doormat's inner edges moved down by EDGE_SLACK, so the slack lands on the mat's edge
+  arch:         { front: [[640, 718], [687, 700], [730, 719]] },
   chalkboard:   { collide: { w: 70, h: 20 } },
 };
 

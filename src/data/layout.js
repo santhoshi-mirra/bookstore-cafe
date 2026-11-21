@@ -36,5 +36,6 @@ export const PIECES = [
   {'key': 'lamp_post_1', 'x': 450, 'y': 712, 'left': 422, 'top': 669, 'w': 57, 'h': 127},
   {'key': 'lamp_post_2', 'x': 607, 'y': 700, 'left': 578, 'top': 634, 'w': 58, 'h': 132},
   {'key': 'lamp_post_3', 'x': 755, 'y': 705, 'left': 728, 'top': 592, 'w': 55, 'h': 124},
+  {'key': 'arch', 'x': 690, 'y': 708, 'left': 630, 'top': 613, 'w': 107, 'h': 129},
   {'key': 'chalkboard', 'x': 545, 'y': 758, 'left': 507, 'top': 655, 'w': 77, 'h': 112},
 ];
